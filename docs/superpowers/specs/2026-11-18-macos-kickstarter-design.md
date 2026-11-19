@@ -293,6 +293,13 @@ support an optional `browser:` field; default is the system browser. Chrome exte
 
 ### 5.9 Admin password (sudo)
 
+> **Changed 2026-11-18 after the first Mac mini run:** the up-front `sudo -v` keep-alive did not stop
+> TeamViewer's pkg installer from prompting behind the spinner. Now every `sudo: true` item (and every
+> `mas` item) runs in its own Terminal window by default, and the up-front prompt was removed.
+> Third-party taps also need `brew trust --cask <cask>` on Homebrew 7+. A notification + sound fires at the end of real runs.
+
+*Original design (superseded):*
+
 At the start of the run phase (only if any picked item may need it), the conductor runs
 `sudo -v` once in the main terminal and keeps the timestamp alive in the background
 (`sudo -n -v` every ~60 s) until the run ends. Inline installs (pkg-based casks such as

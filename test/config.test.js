@@ -15,7 +15,7 @@ test('brew shorthand expands', () => {
 test('brew_cask + brew_tap + app expand', () => {
   const i = expandItem({ id: 'orca', name: 'Orca', section: 'apps', brew_tap: 'stablyai/orca', brew_cask: 'stablyai/orca/orca', app: 'Orca.app' });
   assert.equal(i.check, 'brew list --cask stablyai/orca/orca >/dev/null 2>&1');
-  assert.equal(i.install, 'brew tap stablyai/orca && brew install --cask stablyai/orca/orca');
+  assert.equal(i.install, 'brew tap stablyai/orca && { brew trust --cask stablyai/orca/orca 2>/dev/null || true; } && brew install --cask stablyai/orca/orca');
   assert.equal(i.sizePath, '/Applications/Orca.app');
   assert.equal(i.versionCmd, 'brew list --cask --versions stablyai/orca/orca');
   assert.deepEqual(i.needs, ['homebrew']);
@@ -94,4 +94,20 @@ test('app accepts a list of alternative bundle names', () => {
   assert.deepEqual(i.app, ['Alfred 6.app', 'Alfred 5.app']);
   assert.equal(i.sizePath, '/Applications/Alfred 6.app');
   assert.deepEqual(expandItem({ id: 'a', name: 'A', section: 'apps', brew_cask: 'a', app: 'A.app' }).app, ['A.app']);
+});
+
+test('brew_tap + brew_cask also trusts just that cask (Homebrew 7 refuses untrusted taps)', () => {
+  const i = expandItem({ id: 'orca', name: 'Orca', section: 'apps', brew_tap: 'stablyai/orca', brew_cask: 'stablyai/orca/orca' });
+  assert.equal(i.install, 'brew tap stablyai/orca && { brew trust --cask stablyai/orca/orca 2>/dev/null || true; } && brew install --cask stablyai/orca/orca');
+});
+
+test('brew_tap + brew formula trusts just that formula', () => {
+  const i = expandItem({ id: 'x', name: 'X', section: 'dev', brew_tap: 'a/b', brew: 'a/b/x' });
+  assert.equal(i.install, 'brew tap a/b && { brew trust --formula a/b/x 2>/dev/null || true; } && brew install a/b/x');
+});
+
+test('sudo items run in their own window by default', () => {
+  assert.equal(expandItem({ id: 'tv', name: 'TV', section: 'apps', brew_cask: 'teamviewer', sudo: true }).window, true);
+  assert.equal(expandItem({ id: 'm', name: 'M', section: 'apps', mas: 1 }).window, true);
+  assert.equal(expandItem({ id: 'n', name: 'N', section: 'apps', mas: 1, window: false }).window, false);
 });

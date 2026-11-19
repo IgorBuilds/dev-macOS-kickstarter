@@ -15,13 +15,13 @@ import { detectItem, detectAll as realDetectAll } from './detect.js';
 import { applyBuiltin, builtinCheck } from './managed-block.js';
 import { spawnWindow, waitForExit } from './window.js';
 import { runLinksItem } from './links.js';
-import { startSudoKeepAlive } from './sudo.js';
 import { runItems } from './runner.js';
 import { pickItems } from './picker.js';
 import { renderReport } from './report.js';
 import { header, consoleUi, STATUS, RULE } from './ui.js';
 import { ask, Cancelled } from './cancel.js';
 import { appStoreReminder } from './appstore.js';
+import { notifyDone } from './notify.js';
 
 const REPO_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -66,6 +66,7 @@ export async function main(argv, deps = {}) {
   const userHome = env.HOME || homedir();
   const exit = deps.exit ?? ((c) => process.exit(c));
   const diskFreeKb = deps.diskFreeKb ?? realDiskFreeKb;
+  const notify = deps.notify ?? notifyDone;
 
   let args;
   try { args = parseArgs(argv); } catch (e) { ui.print(pc.red(`❌ ${e.message}`)); ui.print(HELP); return 2; }
@@ -131,14 +132,12 @@ export async function main(argv, deps = {}) {
 
   const results = [];
   let ordered = [];
-  let keepAlive = null;
   let finalizing = null;
 
   // Memoised: Ctrl+C during cleanup (or a second Ctrl+C) gets the same promise, never a crash.
   // Deferred start so `finalizing` is set before any work (and any re-entrant SIGINT) happens.
   const finalize = (interrupted) => (finalizing ??= Promise.resolve().then(() => doFinalize(interrupted)));
   const doFinalize = async (interrupted) => {
-    keepAlive?.stop();
     const doneIds = new Set(results.map((r) => r.id));
     for (const item of ordered) {
       if (!doneIds.has(item.id)) results.push({ id: item.id, name: item.name, emoji: item.emoji, section: item.section, status: 'skipped', durationMs: 0, attempts: 0, note: 'interrupted' });
@@ -157,6 +156,7 @@ export async function main(argv, deps = {}) {
       ui.print(rep.terminal);
       run.writeReport(rep.markdown);
       const failed = results.filter((r) => r.status === 'failed').length;
+      if (!args.dryRun) await notify({ counts: { done: results.filter((r) => r.status === 'done').length, failed }, interrupted });
       run.event('run_end', {
         interrupted, duration_ms: endedAt - startedAt, disk_free_end: diskEndKb,
         counts: Object.fromEntries(Object.keys(STATUS).map((s) => [s, results.filter((r) => r.status === s).length])),
@@ -195,11 +195,6 @@ export async function main(argv, deps = {}) {
     }
     ordered = kept;
     ui.print(`\n${RULE}\n${pc.bold(args.dryRun ? '📝 Dry run — nothing will change' : `▶️  Running ${ordered.length} item(s)`)}`);
-
-    if (!args.dryRun && ordered.some((i) => i.sudo)) {
-      ui.print(pc.cyan('\n🔐 Some installs need your password once.'));
-      keepAlive = (deps.startSudo ?? startSudoKeepAlive)();
-    }
 
     await runItems(ordered, {
       results, env: runEnv, run, state, home: userHome, repoDir, dryRun: args.dryRun, prompts, ui,

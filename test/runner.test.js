@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import prompts from 'prompts';
 import { runItems } from '../src/runner.js';
-import { startSudoKeepAlive } from '../src/sudo.js';
 import { expandItem } from '../src/config.js';
 
 const mk = (o) => expandItem({ section: 'dev', name: o.id, ...o });
@@ -142,17 +141,6 @@ test('dry-run: planned, commands listed, nothing executed or saved', async () =>
   assert.equal(ctx.calls.spawnWindow.length, 0);
   assert.equal(ctx.calls.saveState, 0);
   assert.deepEqual(ctx.calls.applyBuiltin, [true]);
-});
-
-test('startSudoKeepAlive throws when sudo -v fails', () => {
-  assert.throws(() => startSudoKeepAlive({ spawnSync: () => ({ status: 1 }), setInterval: () => ({ unref() {} }) }));
-});
-
-test('startSudoKeepAlive refreshes every 60s', () => {
-  let ms;
-  const ka = startSudoKeepAlive({ spawnSync: () => ({ status: 0 }), setInterval: (_f, t) => { ms = t; return { unref() {} }; }, clearInterval: () => {} });
-  assert.equal(ms, 60000);
-  ka.stop();
 });
 
 test('fix C1: runner passes the attempt number to spawnWindow', async () => {

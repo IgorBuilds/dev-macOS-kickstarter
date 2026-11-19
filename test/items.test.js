@@ -11,7 +11,7 @@ test('items.yaml loads without problems', () => {
 });
 
 test('sections in order', () => {
-  assert.deepEqual(config.sections.map((s) => s.id), ['dev', 'apps', 'links', 'macos']);
+  assert.ok(config.sections.length >= 4);
 });
 
 test('required items present', () => {
@@ -37,11 +37,42 @@ test('alfred workflows has 11 links, chrome extensions open in Chrome', () => {
   assert.ok(ext.needs.includes('google-chrome'));
 });
 
-test('window items are homebrew, nvm, xcode', () => {
-  assert.deepEqual(config.items.filter((i) => i.window).map((i) => i.id).sort(), ['homebrew', 'nvm', 'xcode']);
+test('window items include homebrew, nvm, xcode and every sudo item', () => {
+  const w = new Set(config.items.filter((i) => i.window).map((i) => i.id));
+  for (const id of ['homebrew', 'nvm', 'xcode', 'teamviewer', 'onedrive', 'docker-desktop']) assert.ok(w.has(id), id);
+  for (const i of config.items) if (i.sudo) assert.ok(i.window, i.id);
 });
 
 test('fix M9: NVM after fails if nvm install fails (last line chains with &&)', () => {
   const nvm = config.items.find((i) => i.id === 'nvm');
   assert.match(nvm.after.trim().split('\n').at(-1), /nvm install --lts &&/);
+});
+
+const EMOJI = /^\p{Emoji_Presentation}$/u;
+
+test('item emojis are single wide emoji (no U+FE0F) so labels never overlap', () => {
+  for (const i of config.items) assert.match(i.emoji, EMOJI, `${i.id}: ${i.emoji} (${[...i.emoji].map((c) => c.codePointAt(0).toString(16)).join(' ')})`);
+});
+
+test('section titles start with one wide emoji and a single space', () => {
+  for (const s of config.sections) {
+    const [first, ...rest] = [...s.title];
+    assert.match(first, EMOJI, s.title);
+    assert.match(rest.join(''), /^ \S/, s.title);
+  }
+});
+
+test('mobile section and new tools', () => {
+  assert.deepEqual(config.sections.map((s) => s.id), ['dev', 'mobile', 'apps', 'links', 'macos']);
+  for (const id of 'pnpm bun deno gh ffmpeg supabase cocoapods watchman eas-cli'.split(' ')) assert.ok(ids.has(id), `missing ${id}`);
+  const sec = (id) => config.items.find((i) => i.id === id).section;
+  for (const id of ['xcode', 'android-studio', 'cocoapods', 'watchman', 'eas-cli']) assert.equal(sec(id), 'mobile', id);
+});
+
+test('pnpm comes from Homebrew, not from an nvm Node', () => {
+  assert.equal(config.items.find((i) => i.id === 'pnpm').install, 'brew install pnpm');
+});
+
+test('bun and deno also count as installed when already on PATH (official installers)', () => {
+  for (const id of ['bun', 'deno']) assert.match(config.items.find((i) => i.id === id).check, new RegExp(`\\|\\| command -v ${id}`));
 });

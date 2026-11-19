@@ -109,3 +109,10 @@ test('fix C2: Ctrl+C while the report is being written does not crash; report st
   assert.equal(code, 0);
   assert.equal(exitCode, 0);
 });
+
+test('dry-run never sends the finish notification', async () => {
+  const home = tmp();
+  let notified = 0;
+  await main(['--dry-run', '--only', 'keyboard-navigation'], deps(home, { notify: async () => { notified++; } }));
+  assert.equal(notified, 0);
+});

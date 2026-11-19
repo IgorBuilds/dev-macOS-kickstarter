@@ -53,7 +53,11 @@ export function expandItem(raw) {
     needs.add('mas');
   }
   if (raw.brew_tap) {
-    install = `brew tap ${raw.brew_tap} && ${install ?? 'true'}`;
+    // Homebrew 7 refuses to load untrusted third-party taps; trust only this one cask/formula.
+    // Optional: older Homebrew has no `trust` command, and explicitly tapped taps may already be trusted.
+    const target = raw.brew_cask ? `--cask ${raw.brew_cask}` : raw.brew ? `--formula ${raw.brew}` : null;
+    const trust = target ? ` && { brew trust ${target} 2>/dev/null || true; }` : '';
+    install = `brew tap ${raw.brew_tap}${trust} && ${install ?? 'true'}`;
     needs.add('homebrew');
   }
   if (raw.check != null) check = String(raw.check).trim();
@@ -71,7 +75,7 @@ export function expandItem(raw) {
     section: raw.section,
     needs: [...needs],
     kind,
-    window: raw.window === true,
+    window: raw.window ?? sudo, // password prompts belong in a visible window, not behind the spinner
     sudo,
     appStore: raw.mas != null,
     check: kind === 'links' ? null : check,

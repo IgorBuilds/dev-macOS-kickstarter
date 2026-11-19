@@ -3,7 +3,7 @@
 # Each item is one thing to set up. Shorthands (pick one):
 #   brew: <formula>          → check `brew list --formula`, install `brew install`
 #   brew_cask: <cask>        → check `brew list --cask`,    install `brew install --cask`
-#   brew_tap: <user/repo>    → prepended `brew tap …` (combine with brew_cask)
+#   brew_tap: <user/repo>    → prepended `brew tap …` + `brew trust` for just this cask/formula (Homebrew 7+)
 #   mas: <App Store id>      → check `mas list`, install `mas install` (needs App Store sign-in)
 #   links: [{name, url}]     → pick → open in browser → you confirm
 #   builtin: zshrc|zprofile  → managed block in your dotfile (see files/)
@@ -16,19 +16,20 @@
 #   app: "X.app" or [list]   → also counts as installed if /Applications/<app> exists (hand-installed apps)
 #   needs: [ids]             → run after these
 #   window: true             → runs in its own Terminal window (you watch / answer prompts)
-#   sudo: true               → may ask for the admin password (asked once at run start)
-#   emoji, note, browser
+#   sudo: true               → may ask for the admin password → runs in its own window (set window: false to override)
+#   emoji (one wide emoji, no ️ variation selector — those misalign in terminals), note, browser
 #
 # Display: A–Z within each section. Run order: dependencies first, then file order.
 
 sections:
-  - { id: dev, title: "🛠  Dev" }
+  - { id: dev, title: "💻 Dev" }
+  - { id: mobile, title: "📱 Mobile" }
   - { id: apps, title: "📦 Apps" }
   - { id: links, title: "🔗 Links" }
-  - { id: macos, title: "⚙️  macOS settings" }
+  - { id: macos, title: "🍎 macOS settings" }
 
 items:
-  # ───────────────────────── 🛠 Dev ─────────────────────────
+  # ───────────────────────── 💻 Dev ─────────────────────────
   - id: homebrew
     name: Homebrew
     emoji: 🍺
@@ -55,7 +56,7 @@ items:
 
   - id: mas
     name: mas (App Store CLI)
-    emoji: 🛍️
+    emoji: 🛒
     section: dev
     brew: mas
     note: Sign in to the App Store app first — mas can't sign in for you.
@@ -116,6 +117,87 @@ items:
     brew_cask: codex
     check: brew list --cask codex >/dev/null 2>&1 || command -v codex >/dev/null
 
+  - id: pnpm
+    name: pnpm
+    emoji: 🟡
+    section: dev
+    brew: pnpm
+    note: Via Homebrew, so it survives `nvm use` switches. Had pnpm inside nvm? Run `npm rm -g pnpm` in each Node version.
+
+  - id: bun
+    name: Bun
+    emoji: 🥟
+    section: dev
+    brew: bun
+    check: brew list --formula bun >/dev/null 2>&1 || command -v bun >/dev/null
+
+  - id: deno
+    name: Deno
+    emoji: 🦕
+    section: dev
+    brew: deno
+    check: brew list --formula deno >/dev/null 2>&1 || command -v deno >/dev/null
+
+  - id: gh
+    name: GitHub CLI
+    emoji: 🐙
+    section: dev
+    brew: gh
+    note: Run `gh auth login` afterwards.
+
+  - id: supabase
+    name: Supabase CLI
+    emoji: 🟩
+    section: dev
+    brew: supabase
+
+  - id: ffmpeg
+    name: ffmpeg
+    emoji: 🎬
+    section: dev
+    brew: ffmpeg
+    note: Big — pulls many codec libraries.
+
+  # ───────────────────────── 📱 Mobile ─────────────────────────
+  - id: android-studio
+    name: Android Studio
+    emoji: 🤖
+    section: mobile
+    brew_cask: android-studio
+    app: Android Studio.app
+
+  - id: xcode
+    name: Xcode
+    emoji: 🔨
+    section: mobile
+    mas: 497799835
+    app: Xcode.app
+    window: true
+    note: ~10 GB from the App Store — this one takes a while.
+
+  - id: cocoapods
+    name: CocoaPods
+    emoji: 🫛
+    section: mobile
+    brew: cocoapods
+    note: iOS dependency manager (brings its own Ruby).
+
+  - id: watchman
+    name: Watchman
+    emoji: 👀
+    section: mobile
+    brew: watchman
+    note: File watcher used by React Native / Metro.
+
+  - id: eas-cli
+    name: EAS CLI
+    emoji: 📲
+    section: mobile
+    needs: [nvm]
+    check: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; command -v eas >/dev/null
+    install: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; npm i -g eas-cli
+    note: Expo builds & submits. Installed into nvm's default Node (the brew formula would pull a second Node).
+
   # ───────────────────────── 📦 Apps ─────────────────────────
   - id: alfred
     name: Alfred
@@ -132,13 +214,6 @@ items:
     brew_cask: alt-tab
     app: AltTab.app
 
-  - id: android-studio
-    name: Android Studio
-    emoji: 🤖
-    section: apps
-    brew_cask: android-studio
-    app: Android Studio.app
-
   - id: bruno
     name: Bruno
     emoji: 🐶
@@ -149,7 +224,7 @@ items:
 
   - id: claude
     name: Claude (desktop)
-    emoji: ✳️
+    emoji: 🟠
     section: apps
     brew_cask: claude
     app: Claude.app
@@ -171,7 +246,7 @@ items:
 
   - id: cot-editor
     name: CotEditor
-    emoji: ✏️
+    emoji: 📓
     section: apps
     mas: 1024640650
     app: CotEditor.app
@@ -214,7 +289,7 @@ items:
 
   - id: mic-drop
     name: Mic Drop
-    emoji: 🎙️
+    emoji: 🎤
     section: apps
     mas: 1489816366
     app: Mic Drop.app
@@ -222,7 +297,7 @@ items:
 
   - id: onedrive
     name: OneDrive
-    emoji: ☁️
+    emoji: 💙
     section: apps
     brew_cask: onedrive
     app: OneDrive.app
@@ -247,7 +322,7 @@ items:
 
   - id: teamviewer
     name: TeamViewer
-    emoji: 🖥️
+    emoji: 💻
     section: apps
     brew_cask: teamviewer
     app: TeamViewer.app
@@ -255,11 +330,11 @@ items:
 
   - id: trackweight
     name: TrackWeight
-    emoji: ⚖️
+    emoji: 📏
     section: apps
     brew_tap: krishkrosh/apps
     brew_cask: krishkrosh/apps/trackweight
-    install: brew tap krishkrosh/apps && brew install --cask krishkrosh/apps/trackweight --force
+    install: brew tap krishkrosh/apps && { brew trust --cask krishkrosh/apps/trackweight 2>/dev/null || true; } && brew install --cask krishkrosh/apps/trackweight --force
     app: TrackWeight.app
     note: Third-party tap (krishkrosh/apps).
 
@@ -269,15 +344,6 @@ items:
     section: apps
     brew_cask: warp
     app: Warp.app
-
-  - id: xcode
-    name: Xcode
-    emoji: 🔨
-    section: apps
-    mas: 497799835
-    app: Xcode.app
-    window: true
-    note: ~10 GB from the App Store — this one takes a while.
 
   # ───────────────────────── 🔗 Links ─────────────────────────
   - id: alfred-workflows
@@ -316,10 +382,10 @@ items:
     links:
       - { name: Office 365, url: "https://www.office.com/?auth=1" }
 
-  # ───────────────────────── ⚙️ macOS settings ─────────────────────────
+  # ───────────────────────── 🍎 macOS settings ─────────────────────────
   - id: keyboard-navigation
     name: Keyboard navigation
-    emoji: ⌨️
+    emoji: 🔤
     section: macos
     check: '[ "$(defaults read NSGlobalDomain AppleKeyboardUIMode 2>/dev/null)" = 2 ]'
     install: defaults write NSGlobalDomain AppleKeyboardUIMode -int 2

@@ -40,11 +40,15 @@ From a local clone:
 
 1. 🔍 Every item's check runs (read-only). Installed apps — even ones you installed by hand — show ✔.
 2. ☑️ One checklist per section (A–Z). Missing items are pre-selected.
-3. 🔐 If anything needs it, your admin password is asked **once** (sudo keeps it alive during the run).
+3. 🛍️ Picked App Store apps? A friendly reminder to sign in first (or skip them this run).
 4. ▶️ Items run in dependency order. Items marked ⚠️ *opens window* pause first, then run in their own
    Terminal window — the main window waits (press `a` to abandon a stuck window).
 5. ❌ On failure: 🔁 Retry · ⏭️ Skip · 🛑 Stop.
 6. 📋 Report: ✅ done · 👤 you confirmed · ⏭️ already there · ❌ failed · 🙈 skipped.
+7. 🔔 A macOS notification + sound when it finishes (Hero = all good, Basso = something failed).
+
+Steps that may ask for your admin password (pkg installers like TeamViewer/OneDrive/Docker, App Store
+installs) always run in their **own window**, so the password prompt is visible.
 
 ## 📁 Where things live
 
