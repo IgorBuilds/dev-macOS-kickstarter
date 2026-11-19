@@ -1,0 +1,335 @@
+# macOS Kickstarter — inventory
+#
+# Each item is one thing to set up. Shorthands (pick one):
+#   brew: <formula>          → check `brew list --formula`, install `brew install`
+#   brew_cask: <cask>        → check `brew list --cask`,    install `brew install --cask`
+#   brew_tap: <user/repo>    → prepended `brew tap …` (combine with brew_cask)
+#   mas: <App Store id>      → check `mas list`, install `mas install` (needs App Store sign-in)
+#   links: [{name, url}]     → pick → open in browser → you confirm
+#   builtin: zshrc|zprofile  → managed block in your dotfile (see files/)
+# Or raw shell:
+#   check: <cmd>             → exit 0 = already done
+#   install: <cmd>           → does the thing
+#   after: <cmd>             → post-install step
+#   (multi-line commands follow shell rules: the LAST line's exit code decides — chain with &&)
+# Extras:
+#   app: "X.app" or [list]   → also counts as installed if /Applications/<app> exists (hand-installed apps)
+#   needs: [ids]             → run after these
+#   window: true             → runs in its own Terminal window (you watch / answer prompts)
+#   sudo: true               → may ask for the admin password (asked once at run start)
+#   emoji, note, browser
+#
+# Display: A–Z within each section. Run order: dependencies first, then file order.
+
+sections:
+  - { id: dev, title: "🛠  Dev" }
+  - { id: apps, title: "📦 Apps" }
+  - { id: links, title: "🔗 Links" }
+  - { id: macos, title: "⚙️  macOS settings" }
+
+items:
+  # ───────────────────────── 🛠 Dev ─────────────────────────
+  - id: homebrew
+    name: Homebrew
+    emoji: 🍺
+    section: dev
+    window: true
+    check: test -x /opt/homebrew/bin/brew
+    install: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    version: /opt/homebrew/bin/brew --version | head -1
+    note: Asks for your password and to press RETURN. Also installs Xcode Command Line Tools.
+
+  - id: zprofile
+    name: .zprofile Homebrew block
+    emoji: 📝
+    section: dev
+    builtin: zprofile
+    needs: [homebrew]
+    note: Adds `brew shellenv` to ~/.zprofile (managed block).
+
+  - id: git
+    name: git
+    emoji: 🌿
+    section: dev
+    brew: git
+
+  - id: mas
+    name: mas (App Store CLI)
+    emoji: 🛍️
+    section: dev
+    brew: mas
+    note: Sign in to the App Store app first — mas can't sign in for you.
+
+  - id: starship
+    name: Starship prompt
+    emoji: 🚀
+    section: dev
+    brew: starship
+
+  - id: zsh-autosuggestions
+    name: zsh-autosuggestions
+    emoji: 💡
+    section: dev
+    brew: zsh-autosuggestions
+
+  - id: nvm
+    name: NVM
+    emoji: 🟢
+    section: dev
+    brew: nvm
+    window: true
+    after: |
+      mkdir -p ~/.nvm
+      export NVM_DIR="$HOME/.nvm"
+      . "$(brew --prefix nvm)/nvm.sh"
+      nvm install --lts && nvm alias default 'lts/*'
+    note: Installs NVM, then the latest LTS Node as default.
+
+  - id: ni
+    name: "@antfu/ni"
+    emoji: 🧭
+    section: dev
+    needs: [nvm]
+    check: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; command -v ni >/dev/null
+    install: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; npm i -g @antfu/ni
+    note: Never think "is this npm, yarn or pnpm?" again.
+
+  - id: zshrc
+    name: .zshrc block
+    emoji: 📝
+    section: dev
+    builtin: zshrc
+    needs: [starship, zsh-autosuggestions, nvm]
+    note: compinit, history, Starship, autosuggestions, NVM (managed block — the rest of your .zshrc is untouched).
+
+  - id: claude-code
+    name: Claude Code (CLI)
+    emoji: 🤖
+    section: dev
+    brew_cask: claude-code
+    check: brew list --cask claude-code >/dev/null 2>&1 || command -v claude >/dev/null
+
+  - id: codex
+    name: Codex (CLI)
+    emoji: 🤖
+    section: dev
+    brew_cask: codex
+    check: brew list --cask codex >/dev/null 2>&1 || command -v codex >/dev/null
+
+  # ───────────────────────── 📦 Apps ─────────────────────────
+  - id: alfred
+    name: Alfred
+    emoji: 🎩
+    section: apps
+    brew_cask: alfred
+    app: ["Alfred 6.app", "Alfred 5.app"]
+    note: Buy the Powerpack to use workflows (https://www.alfredapp.com/shop/).
+
+  - id: alt-tab
+    name: AltTab
+    emoji: 🔀
+    section: apps
+    brew_cask: alt-tab
+    app: AltTab.app
+
+  - id: android-studio
+    name: Android Studio
+    emoji: 🤖
+    section: apps
+    brew_cask: android-studio
+    app: Android Studio.app
+
+  - id: bruno
+    name: Bruno
+    emoji: 🐶
+    section: apps
+    brew_cask: bruno
+    app: Bruno.app
+    note: HTTP client.
+
+  - id: claude
+    name: Claude (desktop)
+    emoji: ✳️
+    section: apps
+    brew_cask: claude
+    app: Claude.app
+
+  - id: cleanshot
+    name: CleanShot X
+    emoji: 📸
+    section: apps
+    brew_cask: cleanshot
+    app: CleanShot X.app
+    note: Paid ($29) — best screenshot/video/OCR tool.
+
+  - id: codex-app
+    name: Codex (desktop)
+    emoji: 🧠
+    section: apps
+    brew_cask: codex-app
+    app: Codex.app
+
+  - id: cot-editor
+    name: CotEditor
+    emoji: ✏️
+    section: apps
+    mas: 1024640650
+    app: CotEditor.app
+
+  - id: dbeaver
+    name: DBeaver
+    emoji: 🦫
+    section: apps
+    brew_cask: dbeaver-community
+    app: DBeaver.app
+
+  - id: disk-space-analyzer
+    name: Disk Space Analyzer
+    emoji: 💽
+    section: apps
+    mas: 446243721
+    app: Disk Inspector.app
+
+  - id: docker-desktop
+    name: Docker Desktop
+    emoji: 🐳
+    section: apps
+    brew_cask: docker-desktop
+    app: Docker.app
+    sudo: true
+
+  - id: google-chrome
+    name: Google Chrome
+    emoji: 🌐
+    section: apps
+    brew_cask: google-chrome
+    app: Google Chrome.app
+
+  - id: libreoffice
+    name: LibreOffice
+    emoji: 📄
+    section: apps
+    brew_cask: libreoffice
+    app: LibreOffice.app
+
+  - id: mic-drop
+    name: Mic Drop
+    emoji: 🎙️
+    section: apps
+    mas: 1489816366
+    app: Mic Drop.app
+    note: Paid ($5) — menubar mic mute toggle with a hotkey.
+
+  - id: onedrive
+    name: OneDrive
+    emoji: ☁️
+    section: apps
+    brew_cask: onedrive
+    app: OneDrive.app
+    sudo: true
+
+  - id: orca
+    name: Orca
+    emoji: 🐋
+    section: apps
+    brew_tap: stablyai/orca
+    brew_cask: stablyai/orca/orca
+    app: Orca.app
+    note: Third-party tap (stablyai/orca).
+
+  - id: rectangle-pro
+    name: Rectangle Pro
+    emoji: 🪟
+    section: apps
+    brew_cask: rectangle-pro
+    app: Rectangle Pro.app
+    note: Free trial / $10 — best window manager.
+
+  - id: teamviewer
+    name: TeamViewer
+    emoji: 🖥️
+    section: apps
+    brew_cask: teamviewer
+    app: TeamViewer.app
+    sudo: true
+
+  - id: trackweight
+    name: TrackWeight
+    emoji: ⚖️
+    section: apps
+    brew_tap: krishkrosh/apps
+    brew_cask: krishkrosh/apps/trackweight
+    install: brew tap krishkrosh/apps && brew install --cask krishkrosh/apps/trackweight --force
+    app: TrackWeight.app
+    note: Third-party tap (krishkrosh/apps).
+
+  - id: warp
+    name: Warp
+    emoji: ⚡
+    section: apps
+    brew_cask: warp
+    app: Warp.app
+
+  - id: xcode
+    name: Xcode
+    emoji: 🔨
+    section: apps
+    mas: 497799835
+    app: Xcode.app
+    window: true
+    note: ~10 GB from the App Store — this one takes a while.
+
+  # ───────────────────────── 🔗 Links ─────────────────────────
+  - id: alfred-workflows
+    name: Alfred workflows
+    emoji: 🎩
+    section: links
+    needs: [alfred]
+    note: Needs the Alfred Powerpack.
+    links:
+      - { name: atop, url: "https://alfred.app/workflows/chrisgrieser/atop/" }
+      - { name: Browser Tabs, url: "https://alfred.app/workflows/epilande/browser-tabs/" }
+      - { name: Calculate Anything, url: "https://alfred.app/workflows/biatidigital/calculate-anything/" }
+      - { name: Default App, url: "https://alfred.app/workflows/acidham/default-app/" }
+      - { name: Download Media, url: "https://alfred.app/workflows/vitor/download-media/" }
+      - { name: Google Translate, url: "https://github.com/xfslove/alfred-google-translate" }
+      - { name: JetBrains Open Project, url: "https://github.com/bchatard/alfred-jetbrains" }
+      - { name: Menu Bar Search, url: "https://alfred.app/workflows/benziahamed/menu-bar-search/" }
+      - { name: NPM, url: "https://github.com/willfarrell/alfred-pkgman-workflow" }
+      - { name: Open Conference URL, url: "https://alfred.app/workflows/caleb531/open-conference-url/" }
+      - { name: Say, url: "https://github.com/BaksiLi/AlfredWorkflows/tree/master/Index/say-workflow" }
+
+  - id: chrome-extensions
+    name: Chrome extensions
+    emoji: 🧩
+    section: links
+    needs: [google-chrome]
+    browser: Google Chrome
+    links:
+      - { name: GitHub Issue Reactions, url: "https://chromewebstore.google.com/detail/github-issue-reactions/enekincdenmmbpgkbhflknhaphpajnfd" }
+      - { name: Quick Jira, url: "https://chromewebstore.google.com/detail/quick-jira/acdnmaeifljongleeegkkfnfcopblokj" }
+
+  - id: office-365
+    name: Office 365 (web)
+    emoji: 🏢
+    section: links
+    links:
+      - { name: Office 365, url: "https://www.office.com/?auth=1" }
+
+  # ───────────────────────── ⚙️ macOS settings ─────────────────────────
+  - id: keyboard-navigation
+    name: Keyboard navigation
+    emoji: ⌨️
+    section: macos
+    check: '[ "$(defaults read NSGlobalDomain AppleKeyboardUIMode 2>/dev/null)" = 2 ]'
+    install: defaults write NSGlobalDomain AppleKeyboardUIMode -int 2
+    note: Tab moves focus between all controls. Annoyingly OFF by default.
+
+  - id: chrome-swipe
+    name: Chrome swipe-back off
+    emoji: 👆
+    section: macos
+    needs: [google-chrome]
+    check: '[ "$(defaults read com.google.Chrome AppleEnableSwipeNavigateWithScrolls 2>/dev/null)" = 0 ]'
+    install: defaults write com.google.Chrome AppleEnableSwipeNavigateWithScrolls -bool false
+    note: Stops two-finger swipe from going back by accident. Restart Chrome afterwards.

@@ -1,0 +1,18 @@
+{
+  "name": "dev-macos-kickstarter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Supervised, re-runnable macOS setup conductor",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "picocolors": "1.1.1",
+    "prompts": "2.4.2",
+    "yaml": "2.9.1"
+  }
+}
