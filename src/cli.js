@@ -23,6 +23,7 @@ import { ask, Cancelled } from './cancel.js';
 import { appStoreReminder } from './appstore.js';
 import { notifyDone } from './notify.js';
 import { confirmPlan } from './confirm.js';
+import { offerOpenApps as realOfferOpenApps, openableItems } from './openapps.js';
 
 const REPO_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -34,16 +35,18 @@ Usage: ./bootstrap.sh [options]      (or: node src/cli.js [options])
   --dry-run           Check + pick + show the exact commands. Changes nothing.
   --only a,b          Skip the picker; set up just these item ids.
   --list              Show every item and whether it's installed, then exit.
+  --open              Open apps the kickstarter installed (one by one or all at once) to set them up.
   --report [name]     Print the last run's report (or a specific run folder name).
   -h, --help          This help.
 `;
 
 export function parseArgs(argv) {
-  const o = { dryRun: false, only: null, list: false, report: null, help: false };
+  const o = { dryRun: false, only: null, list: false, report: null, help: false, open: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') o.dryRun = true;
     else if (a === '--list') o.list = true;
+    else if (a === '--open') o.open = true;
     else if (a === '-h' || a === '--help') o.help = true;
     else if (a === '--only') o.only = (argv[++i] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--report') o.report = argv[i + 1] && !argv[i + 1].startsWith('-') ? argv[++i] : 'last';
@@ -69,6 +72,7 @@ export async function main(argv, deps = {}) {
   const diskFreeKb = deps.diskFreeKb ?? realDiskFreeKb;
   const notify = deps.notify ?? notifyDone;
   const runShell = deps.runShell ?? realRunShell;
+  const offerOpenApps = deps.offerOpenApps ?? realOfferOpenApps;
 
   let args;
   try { args = parseArgs(argv); } catch (e) { ui.print(pc.red(`❌ ${e.message}`)); ui.print(HELP); return 2; }
@@ -98,7 +102,13 @@ export async function main(argv, deps = {}) {
     if (unknown.length) { ui.print(pc.red(`❌ Unknown item id(s): ${unknown.join(', ')}`)); return 2; }
   }
 
-  const state = loadState(home, { readOnly: args.dryRun || args.list });
+  const state = loadState(home, { readOnly: args.dryRun || args.list || args.open });
+  if (args.open) {
+    const installed = config.items.filter((i) => i.app?.length && state.items[i.id]?.status === 'done');
+    if (!installed.length) { ui.print('\n🤷 No apps installed by the kickstarter yet.'); return 0; }
+    try { await offerOpenApps(installed, { prompts, ui }); } catch (e) { if (!(e instanceof Cancelled)) throw e; }
+    return 0;
+  }
   let runEnv = brewEnv({ ...env });
   const detectDeps = {
     state, env: runEnv,
@@ -226,7 +236,9 @@ export async function main(argv, deps = {}) {
       saveState: (s) => saveState(home, s),
       brewEnv,
     });
-    return await finalize(false);
+    const code = await finalize(false);
+    if (!args.dryRun) await offerOpenApps(openableItems(config.items, results), { prompts, ui });
+    return code;
   } catch (e) {
     if (e instanceof Cancelled) { ui.print(pc.yellow('\n🛑 Cancelled.')); return await finalize(true); }
     run.event('crash', { message: e.message, stack: e.stack });

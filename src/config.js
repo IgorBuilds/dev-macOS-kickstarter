@@ -88,6 +88,8 @@ export function expandItem(raw) {
     versionCmd,
     sizePath,
     note: raw.note != null ? String(raw.note).trim() : null,
+    setup: raw.setup != null ? String(raw.setup).trim() : null,
+    heavy: raw.heavy === true,
   };
 }
 

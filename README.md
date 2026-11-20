@@ -33,6 +33,7 @@ From a local clone:
 | `--dry-run` | Checks + picker + prints the exact commands. Installs nothing, edits nothing, no password, no windows. Never touches `state.json`. |
 | `--only a,b` | Skip the picker; set up just these item ids. |
 | `--list` | Show every item and whether it's installed. |
+| `--open` | Open apps the kickstarter installed (one by one or all at once) to set them up. |
 | `--report [name]` | Reprint the last run's report (or a specific run folder). |
 | `-h`, `--help` | Help. |
 
@@ -47,6 +48,8 @@ From a local clone:
 5. ❌ On failure: 🔁 Retry · ⏭️ Skip · 🛑 Stop.
 6. 📋 Report: ✅ done · 👤 you confirmed · ⏭️ already there · ❌ failed · 🙈 skipped.
 7. 🔔 A macOS notification + sound when it finishes (Hero = all good, Basso = something failed).
+8. 🚀 Open your new apps to set them up — **one by one** (with a setup tip each, then Next) or **all at once**.
+   Heavy apps (Xcode, Android Studio, Docker) start unticked. Later: `--open` brings this back.
 
 Steps that may ask for your admin password (pkg installers like TeamViewer/OneDrive/Docker, App Store
 installs) always **open a new Terminal window**, so the password prompt is visible.

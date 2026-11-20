@@ -23,7 +23,7 @@ const deps = (home, over = {}) => {
 };
 
 test('parseArgs handles flags', () => {
-  assert.deepEqual(parseArgs(['--dry-run', '--only', 'git,nvm']), { dryRun: true, only: ['git', 'nvm'], list: false, report: null, help: false });
+  assert.deepEqual(parseArgs(['--dry-run', '--only', 'git,nvm']), { dryRun: true, only: ['git', 'nvm'], list: false, report: null, help: false, open: false });
   assert.equal(parseArgs(['--report']).report, 'last');
   assert.equal(parseArgs(['--report', '2026-11-18_143205']).report, '2026-11-18_143205');
   assert.equal(parseArgs(['--list']).list, true);
@@ -155,4 +155,25 @@ test('confirm step: go back reopens the picker with your picks kept; cancel inst
   const pickers = asked.filter((q) => q.type === 'multiselect');
   assert.equal(pickers.length, 2);
   assert.equal(pickers[1].choices.find((c) => c.value === 'bruno').selected, true);
+});
+
+test('parseArgs: --open', () => {
+  assert.equal(parseArgs(['--open']).open, true);
+});
+
+test('--open offers apps the kickstarter installed earlier (from state)', async () => {
+  const home = tmp();
+  writeFileSync(join(home, 'state.json'), JSON.stringify({ version: 1, items: { bruno: { status: 'done', lastRun: 'x' }, git: { status: 'done', lastRun: 'x' }, warp: { status: 'failed', lastRun: 'x' } } }));
+  const asked = [];
+  prompts.inject([[]]);
+  const code = await main(['--open'], deps(home, { prompts: async (q, o) => { asked.push(q); return prompts(q, o); } }));
+  assert.equal(code, 0);
+  assert.deepEqual(asked[0].choices.map((c) => c.value), ['bruno']);
+});
+
+test('dry-run never offers to open apps', async () => {
+  const home = tmp();
+  let offered = 0;
+  await main(['--dry-run', '--only', 'keyboard-navigation'], deps(home, { offerOpenApps: async () => { offered++; } }));
+  assert.equal(offered, 0);
 });

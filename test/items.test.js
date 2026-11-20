@@ -103,3 +103,9 @@ test('Sublime Text app via official cask', () => {
   assert.equal(i.install, 'brew install --cask sublime-text');
   assert.deepEqual(i.app, ['Sublime Text.app']);
 });
+
+test('heavy apps start unticked in the open-apps step; tips exist for key apps', () => {
+  const by = (id) => config.items.find((i) => i.id === id);
+  for (const id of ['xcode', 'android-studio', 'docker-desktop']) assert.equal(by(id).heavy, true, id);
+  for (const id of ['alfred', 'alt-tab', 'rectangle-pro', 'cleanshot']) assert.ok(by(id).setup, id);
+});

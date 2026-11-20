@@ -17,6 +17,8 @@
 #   needs: [ids]             → run after these
 #   window: true             → runs in its own Terminal window (you watch / answer prompts)
 #   sudo: true               → may ask for the admin password → runs in its own window (set window: false to override)
+#   setup: <tip>             → shown when the app is opened after install (and in --open)
+#   heavy: true              → unticked by default in the open-apps step
 #   emoji (one wide emoji, no ️ variation selector — those misalign in terminals), note, browser
 #
 # Display: A–Z within each section. Run order: dependencies first, then file order.
@@ -165,6 +167,8 @@ items:
     section: mobile
     brew_cask: android-studio
     app: Android Studio.app
+    setup: Run the setup wizard (downloads the Android SDK — big)
+    heavy: true
 
   - id: xcode
     name: Xcode
@@ -174,6 +178,8 @@ items:
     app: Xcode.app
     window: true
     note: ~10 GB from the App Store — this one takes a while.
+    setup: Accept the license · install the iOS simulator platform
+    heavy: true
 
   - id: cocoapods
     name: CocoaPods
@@ -206,6 +212,7 @@ items:
     brew_cask: alfred
     app: ["Alfred 6.app", "Alfred 5.app"]
     note: Buy the Powerpack to use workflows (https://www.alfredapp.com/shop/).
+    setup: Set hotkey ⌘Space · enter your Powerpack license · turn on Clipboard History
 
   - id: alt-tab
     name: AltTab
@@ -213,6 +220,7 @@ items:
     section: apps
     brew_cask: alt-tab
     app: AltTab.app
+    setup: Grant Accessibility + Screen Recording · pick ⌘Tab as the shortcut
 
   - id: bruno
     name: Bruno
@@ -221,6 +229,7 @@ items:
     brew_cask: bruno
     app: Bruno.app
     note: HTTP client.
+    setup: Open your collections folder
 
   - id: claude
     name: Claude (desktop)
@@ -228,6 +237,7 @@ items:
     section: apps
     brew_cask: claude
     app: Claude.app
+    setup: Sign in
 
   - id: cleanshot
     name: CleanShot X
@@ -236,6 +246,7 @@ items:
     brew_cask: cleanshot
     app: CleanShot X.app
     note: Paid ($29) — best screenshot/video/OCR tool.
+    setup: Activate your license · set screenshot shortcuts
 
   - id: codex-app
     name: Codex (desktop)
@@ -243,6 +254,7 @@ items:
     section: apps
     brew_cask: codex-app
     app: Codex.app
+    setup: Sign in
 
   - id: cot-editor
     name: CotEditor
@@ -257,6 +269,7 @@ items:
     section: apps
     brew_cask: dbeaver-community
     app: DBeaver.app
+    setup: Add your database connections
 
   - id: disk-space-analyzer
     name: Disk Space Analyzer
@@ -264,6 +277,7 @@ items:
     section: apps
     mas: 446243721
     app: Disk Inspector.app
+    setup: Grant Full Disk Access if it asks
 
   - id: docker-desktop
     name: Docker Desktop
@@ -272,6 +286,8 @@ items:
     brew_cask: docker-desktop
     app: Docker.app
     sudo: true
+    setup: Accept the terms · Settings → Resources
+    heavy: true
 
   - id: google-chrome
     name: Google Chrome
@@ -279,6 +295,7 @@ items:
     section: apps
     brew_cask: google-chrome
     app: Google Chrome.app
+    setup: Sign in to sync · set as default browser?
 
   - id: libreoffice
     name: LibreOffice
@@ -294,6 +311,7 @@ items:
     mas: 1489816366
     app: Mic Drop.app
     note: Paid ($5) — menubar mic mute toggle with a hotkey.
+    setup: Set the mute hotkey · allow Microphone
 
   - id: onedrive
     name: OneDrive
@@ -302,6 +320,7 @@ items:
     brew_cask: onedrive
     app: OneDrive.app
     sudo: true
+    setup: Sign in · pick the sync folder
 
   - id: orbstack
     name: OrbStack
@@ -310,6 +329,7 @@ items:
     brew_cask: orbstack
     app: OrbStack.app
     note: Fast, light Docker Desktop replacement (containers + Linux VMs). Pick one of Docker Desktop / OrbStack.
+    setup: Choose Docker / Linux · migrate from Docker Desktop if asked
 
   - id: orca
     name: Orca
@@ -319,6 +339,7 @@ items:
     brew_cask: stablyai/orca/orca
     app: Orca.app
     note: Third-party tap (stablyai/orca).
+    setup: Sign in
 
   - id: rectangle-pro
     name: Rectangle Pro
@@ -327,6 +348,7 @@ items:
     brew_cask: rectangle-pro
     app: Rectangle Pro.app
     note: Free trial / $10 — best window manager.
+    setup: Grant Accessibility · activate your license
 
   - id: sublime-text
     name: Sublime Text
@@ -343,6 +365,7 @@ items:
     brew_cask: teamviewer
     app: TeamViewer.app
     sudo: true
+    setup: Grant Accessibility + Screen Recording if others will control this Mac
 
   - id: trackweight
     name: TrackWeight
@@ -360,6 +383,7 @@ items:
     section: apps
     brew_cask: warp
     app: Warp.app
+    setup: Sign in · import your settings
 
   # ───────────────────────── 🔗 Links ─────────────────────────
   - id: alfred-workflows
