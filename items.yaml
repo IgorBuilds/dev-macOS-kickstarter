@@ -92,18 +92,27 @@ items:
     name: "@antfu/ni"
     emoji: 🧭
     section: dev
-    needs: [nvm]
-    check: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; command -v ni >/dev/null
-    install: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; npm i -g @antfu/ni
-    note: Never think "is this npm, yarn or pnpm?" again.
+    needs: [nvm, pnpm]
+    check: 'export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; export PNPM_HOME="$HOME/Library/pnpm"; export PATH="$PNPM_HOME:$PATH"; command -v ni >/dev/null'
+    install: 'export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; export PNPM_HOME="$HOME/Library/pnpm"; export PATH="$PNPM_HOME:$PATH"; pnpm add -g @antfu/ni'
+    note: Never think "is this npm, yarn or pnpm?" again. Installed with pnpm, so it survives `nvm use` switches.
+
+  - id: nirc
+    name: ni → pnpm by default
+    emoji: 🧭
+    section: dev
+    needs: [ni]
+    check: grep -qx 'defaultAgent=pnpm' ~/.nirc 2>/dev/null && grep -qx 'globalAgent=pnpm' ~/.nirc
+    install: touch ~/.nirc && sed -i '' '/^defaultAgent=/d;/^globalAgent=/d' ~/.nirc && printf 'defaultAgent=pnpm\nglobalAgent=pnpm\n' >> ~/.nirc
+    note: Outside a project (no lockfile), ni / nlx / ni -g use pnpm instead of asking. Other ~/.nirc lines are kept.
 
   - id: zshrc
     name: .zshrc block
     emoji: 📝
     section: dev
     builtin: zshrc
-    needs: [starship, zsh-autosuggestions, nvm]
-    note: compinit, history, Starship, autosuggestions, NVM (managed block — the rest of your .zshrc is untouched).
+    needs: [starship, zsh-autosuggestions, nvm, pnpm]
+    note: compinit, history, Starship, autosuggestions, NVM, pnpm globals (managed block — the rest of your .zshrc is untouched).
 
   - id: claude-code
     name: Claude Code (CLI)
@@ -124,7 +133,7 @@ items:
     emoji: 🟡
     section: dev
     brew: pnpm
-    note: Via Homebrew, so it survives `nvm use` switches. Had pnpm inside nvm? Run `npm rm -g pnpm` in each Node version.
+    note: "Via Homebrew, so it survives `nvm use` switches. Global tools → `pnpm add -g <pkg>`. Had pnpm inside nvm? Run `npm rm -g pnpm` in each Node version."
 
   - id: bun
     name: Bun
@@ -199,10 +208,10 @@ items:
     name: EAS CLI
     emoji: 📲
     section: mobile
-    needs: [nvm]
-    check: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; command -v eas >/dev/null
-    install: export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; npm i -g eas-cli
-    note: Expo builds & submits. Installed into nvm's default Node (the brew formula would pull a second Node).
+    needs: [nvm, pnpm]
+    check: 'export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; export PNPM_HOME="$HOME/Library/pnpm"; export PATH="$PNPM_HOME:$PATH"; command -v eas >/dev/null'
+    install: 'export NVM_DIR="$HOME/.nvm"; . "$(brew --prefix nvm)/nvm.sh"; export PNPM_HOME="$HOME/Library/pnpm"; export PATH="$PNPM_HOME:$PATH"; pnpm add -g eas-cli'
+    note: Expo builds & submits. Installed with pnpm, so it survives `nvm use` switches.
 
   # ───────────────────────── 📦 Apps ─────────────────────────
   - id: alfred

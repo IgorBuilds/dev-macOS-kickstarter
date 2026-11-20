@@ -119,3 +119,32 @@ test('AltTab on ⌘Tab: macOS item after AltTab, sets its hold key to ⌘ and re
   assert.match(i.install, /defaults write com\.lwouis\.alt-tab-macos holdShortcut '<dict><key>secureData<\/key><data>[A-Za-z0-9+/=]+<\/data><key>string<\/key><string>⌘<\/string><\/dict>'/);
   assert.match(i.install, /open -a AltTab/);
 });
+
+import { readFileSync as readF } from 'node:fs';
+
+test('ni and eas-cli install globally with pnpm (outside nvm), with Node + PNPM_HOME available', () => {
+  for (const [id, pkg, bin] of [['ni', '@antfu/ni', 'ni'], ['eas-cli', 'eas-cli', 'eas']]) {
+    const i = config.items.find((x) => x.id === id);
+    assert.ok(i.needs.includes('pnpm') && i.needs.includes('nvm'), id);
+    assert.match(i.install, new RegExp(`pnpm add -g ${pkg.replace('/', '\\/')}$`), id);
+    assert.doesNotMatch(i.install, /npm i -g/, id);
+    for (const s of [i.install, i.check]) assert.match(s, /export PNPM_HOME="\$HOME\/Library\/pnpm"/, id);
+    assert.match(i.check, new RegExp(`command -v ${bin} `), id);
+  }
+});
+
+test('~/.nirc item makes ni default to pnpm', () => {
+  const i = config.items.find((x) => x.id === 'nirc');
+  assert.ok(i, 'missing nirc');
+  assert.ok(i.needs.includes('ni'));
+  assert.match(i.install, /defaultAgent=pnpm/);
+  assert.match(i.install, /globalAgent=pnpm/);
+  assert.match(i.check, /defaultAgent=pnpm/);
+});
+
+test('.zshrc block puts pnpm global bin on PATH; zshrc needs pnpm', () => {
+  const body = readF(new URL('../files/zshrc-block.zsh', import.meta.url), 'utf8');
+  assert.match(body, /export PNPM_HOME="\$HOME\/Library\/pnpm"/);
+  assert.match(body, /export PATH="\$PNPM_HOME:\$PATH"/);
+  assert.ok(config.items.find((x) => x.id === 'zshrc').needs.includes('pnpm'));
+});
