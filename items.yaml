@@ -220,7 +220,7 @@ items:
     section: apps
     brew_cask: alt-tab
     app: AltTab.app
-    setup: Grant Accessibility + Screen Recording · pick ⌘Tab as the shortcut
+    setup: Grant Accessibility + Screen Recording (⌘Tab is set by the 'AltTab on ⌘Tab' item)
 
   - id: bruno
     name: Bruno
@@ -442,6 +442,18 @@ items:
       "<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>32</integer><integer>49</integer><integer>1048576</integer></array><key>type</key><string>standard</string></dict></dict>"
       && /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
     note: Turns off Spotlight's ⌘Space so Alfred can use it — pick ⌘Space when Alfred asks for its hotkey.
+
+  - id: alttab-cmd-tab
+    name: AltTab on ⌘Tab
+    emoji: 🔀
+    section: macos
+    needs: [alt-tab]
+    check: |
+      defaults read com.lwouis.alt-tab-macos holdShortcut 2>/dev/null | grep -qF 'string = "\U2318"'
+    install: |
+      osascript -e 'quit app "AltTab"' 2>/dev/null; sleep 1
+      defaults write com.lwouis.alt-tab-macos holdShortcut '<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGmCwwZGhscVSRudWxs1g0ODxAREhMUFRQXGF1tb2RpZmllckZsYWdzXxAbY2hhcmFjdGVyc0lnbm9yaW5nTW9kaWZpZXJzViRjbGFzc1pjaGFyYWN0ZXJzV2tleUNvZGVXdmVyc2lvboAEgACABYAAgAOAAlExEf//EgAQAADSHR4fIFokY2xhc3NuYW1lWCRjbGFzc2VzWlNSU2hvcnRjdXSiHyFYTlNPYmplY3QACAARABoAJAApADIANwBJAEwAUQBTAFoAYABtAHsAmQCgAKsAswC7AL0AvwDBAMMAxQDHAMkAzADRANYA4QDqAPUA+AAAAAAAAAIBAAAAAAAAACIAAAAAAAAAAAAAAAAAAAEB</data><key>string</key><string>⌘</string></dict>' && open -a AltTab
+    note: Makes ⌘Tab open AltTab (hold ⌘, press Tab). macOS's own switcher can't be turned off — AltTab takes over once it has Accessibility.
 
   - id: chrome-swipe
     name: Chrome swipe-back off

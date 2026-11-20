@@ -109,3 +109,13 @@ test('heavy apps start unticked in the open-apps step; tips exist for key apps',
   for (const id of ['xcode', 'android-studio', 'docker-desktop']) assert.equal(by(id).heavy, true, id);
   for (const id of ['alfred', 'alt-tab', 'rectangle-pro', 'cleanshot']) assert.ok(by(id).setup, id);
 });
+
+test('AltTab on ⌘Tab: macOS item after AltTab, sets its hold key to ⌘ and restarts it', () => {
+  const i = config.items.find((x) => x.id === 'alttab-cmd-tab');
+  assert.ok(i, 'missing alttab-cmd-tab');
+  assert.equal(i.section, 'macos');
+  assert.ok(i.needs.includes('alt-tab'));
+  assert.match(i.check, /com\.lwouis\.alt-tab-macos holdShortcut/);
+  assert.match(i.install, /defaults write com\.lwouis\.alt-tab-macos holdShortcut '<dict><key>secureData<\/key><data>[A-Za-z0-9+/=]+<\/data><key>string<\/key><string>⌘<\/string><\/dict>'/);
+  assert.match(i.install, /open -a AltTab/);
+});
