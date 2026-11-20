@@ -34,3 +34,4 @@ test('fix M13: Node is extracted in a temp dir, then moved into place', () => {
   assert.match(src, /tar -xzf "\$TMP\/\$TARBALL" -C "\$TMP"/);
   assert.match(src, /mv "\$TMP\/\$NODE_NAME" "\$NODE_DIR"/);
 });
+

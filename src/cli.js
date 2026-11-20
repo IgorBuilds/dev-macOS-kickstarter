@@ -7,7 +7,7 @@ import realPrompts from 'prompts';
 import pc from 'picocolors';
 import { loadConfig, ConfigError } from './config.js';
 import { orderForRun, missingDeps } from './order.js';
-import { runShell } from './shell.js';
+import { runShell as realRunShell } from './shell.js';
 import { brewEnv } from './env.js';
 import { dataHome, loadState, saveState, recordOptOuts, optedOutIds } from './state.js';
 import { createRun, diskFreeKb as realDiskFreeKb, sizeKb, systemInfo as realSystemInfo } from './telemetry.js';
@@ -22,6 +22,7 @@ import { header, consoleUi, STATUS, RULE } from './ui.js';
 import { ask, Cancelled } from './cancel.js';
 import { appStoreReminder } from './appstore.js';
 import { notifyDone } from './notify.js';
+import { confirmPlan } from './confirm.js';
 
 const REPO_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -67,6 +68,7 @@ export async function main(argv, deps = {}) {
   const exit = deps.exit ?? ((c) => process.exit(c));
   const diskFreeKb = deps.diskFreeKb ?? realDiskFreeKb;
   const notify = deps.notify ?? notifyDone;
+  const runShell = deps.runShell ?? realRunShell;
 
   let args;
   try { args = parseArgs(argv); } catch (e) { ui.print(pc.red(`❌ ${e.message}`)); ui.print(HELP); return 2; }
@@ -173,30 +175,42 @@ export async function main(argv, deps = {}) {
 
   try {
     let picked;
-    if (args.only) picked = new Set(args.only);
-    else {
-      picked = new Set(await pickItems(config, statuses, { prompts, print: ui.print, optedOut: optedOutIds(state) }));
-      if (!args.dryRun) {
-        const missing = config.items.filter((i) => statuses.get(i.id)?.state === 'missing').map((i) => i.id);
-        recordOptOuts(state, { missing, picked: [...picked] });
-        saveState(home, state);
+    let preselected = null;
+    const missingIds = config.items.filter((i) => statuses.get(i.id)?.state === 'missing').map((i) => i.id);
+    const nameOf = (id) => config.items.find((i) => i.id === id)?.name ?? id;
+    for (;;) {
+      picked = args.only
+        ? new Set(args.only)
+        : new Set(await pickItems(config, statuses, { prompts, print: ui.print, optedOut: optedOutIds(state), preselected }));
+      if (!picked.size) break;
+      const isInstalled = (id) => statuses.get(id)?.state === 'installed';
+      const missing = missingDeps(config.items, picked, isInstalled);
+      if (missing.length) {
+        const all = [...new Set(missing.flatMap((m) => m.missing))];
+        ui.print(pc.yellow(`\n⚠️  Some picks need things that aren’t installed or picked:`));
+        for (const m of missing) ui.print(pc.yellow(`   • ${nameOf(m.id)} → ${m.missing.map(nameOf).join(', ')}`));
+        const add = await ask(prompts, { type: 'confirm', message: `Add ${all.map(nameOf).join(', ')} to this run?`, initial: true });
+        run.event('prompt', { question: 'add_missing_deps', answer: add, ids: all });
+        if (add) all.forEach((id) => picked.add(id));
       }
+      ordered = orderForRun(config.items, picked);
+      if (args.dryRun) break;
+      const go = await confirmPlan(ordered, { config, prompts, ui, allowBack: !args.only });
+      run.event('prompt', { question: 'confirm_plan', answer: go });
+      if (go === 'start') break;
+      if (go === 'cancel') {
+        ordered = [];
+        ui.print('\n👋 Cancelled — nothing was installed.');
+        return await finalize(false);
+      }
+      preselected = picked; // 'back': reopen the picker with these picks kept
+    }
+    if (!args.only && !args.dryRun) {
+      recordOptOuts(state, { missing: missingIds, picked: [...picked] });
+      saveState(home, state);
     }
     if (!picked.size) { ui.print('\n👋 Nothing picked.'); return await finalize(false); }
     run.event('picked', { ids: [...picked] });
-
-    const isInstalled = (id) => statuses.get(id)?.state === 'installed';
-    const missing = missingDeps(config.items, picked, isInstalled);
-    if (missing.length) {
-      const all = [...new Set(missing.flatMap((m) => m.missing))];
-      const nameOf = (id) => config.items.find((i) => i.id === id)?.name ?? id;
-      ui.print(pc.yellow(`\n⚠️  Some picks need things that aren’t installed or picked:`));
-      for (const m of missing) ui.print(pc.yellow(`   • ${nameOf(m.id)} → ${m.missing.map(nameOf).join(', ')}`));
-      const add = await ask(prompts, { type: 'confirm', message: `Add ${all.map(nameOf).join(', ')} to this run?`, initial: true });
-      run.event('prompt', { question: 'add_missing_deps', answer: add, ids: all });
-      if (add) all.forEach((id) => picked.add(id));
-    }
-    ordered = orderForRun(config.items, picked);
     const kept = await appStoreReminder(ordered, { dryRun: args.dryRun, prompts, ui });
     for (const item of ordered.filter((i) => !kept.includes(i))) {
       results.push({ id: item.id, name: item.name, emoji: item.emoji, section: item.section, status: 'skipped', durationMs: 0, attempts: 0, note: 'App Store skipped' });

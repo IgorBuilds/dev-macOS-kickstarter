@@ -87,7 +87,6 @@ test('--list prints sections and does not create a run', async () => {
 test('fix M10: dry-run never renames a corrupt state.json', async () => {
   const home = tmp();
   writeFileSync(join(home, 'state.json'), '{oops');
-  prompts.inject([true]);
   await main(['--dry-run', '--only', 'keyboard-navigation'], deps(home));
   assert.equal(readFileSync(join(home, 'state.json'), 'utf8'), '{oops');
   assert.ok(!readdirSync(home).some((f) => f.includes('corrupt')));
@@ -141,4 +140,19 @@ test('real run: unticked missing items are remembered and start unticked next ti
   await main([], deps(home, { detectAll: detect, prompts: spy, notify: async () => {} }));
   const bruno = asked[0].choices.find((c) => c.value === 'bruno');
   assert.equal(bruno.selected, false);
+});
+
+test('confirm step: go back reopens the picker with your picks kept; cancel installs nothing', async () => {
+  const home = tmp();
+  const detect = async (items) => new Map(items.map((i) => [i.id, { state: i.id === 'bruno' ? 'missing' : 'installed', via: 'check' }]));
+  const asked = [];
+  const spy = async (q, o) => { asked.push(q); return prompts(q, o); };
+  let ran = 0;
+  prompts.inject([['bruno'], 'back', ['bruno'], 'cancel']);
+  const code = await main([], deps(home, { detectAll: detect, prompts: spy, notify: async () => {}, runShell: async () => { ran++; return { code: 0, tail: [], timedOut: false }; } }));
+  assert.equal(code, 0);
+  assert.equal(ran, 0);
+  const pickers = asked.filter((q) => q.type === 'multiselect');
+  assert.equal(pickers.length, 2);
+  assert.equal(pickers[1].choices.find((c) => c.value === 'bruno').selected, true);
 });

@@ -63,7 +63,8 @@ test('missing selected, unknown and confirmed not selected', () => {
 
 test('window items carry a warning, notes become descriptions', () => {
   const hb = buildChoices(config, new Map([['homebrew', { state: 'missing' }]])).find((c) => c.value === 'homebrew');
-  assert.match(strip(hb.title), /⚠️ opens window/);
+  assert.match(strip(hb.title), /🪟 own window/);
+  assert.doesNotMatch(strip(hb.title), /⚠️/);
   assert.equal(hb.description, 'needs you');
 });
 
@@ -95,4 +96,10 @@ test('opted-out missing items start unticked with a hint', () => {
   const c = buildChoices(config, statuses, new Set(['xcode'])).find((x) => x.value === 'xcode');
   assert.equal(c.selected, false);
   assert.match(strip(c.title), /skipped last time/);
+});
+
+test('preselected overrides the default ticks (used when going back from the confirm step)', () => {
+  const ch = buildChoices(config, statuses, new Set(), new Set(['alfred']));
+  assert.equal(ch.find((c) => c.value === 'alfred').selected, true);
+  assert.equal(ch.find((c) => c.value === 'xcode').selected, false);
 });
