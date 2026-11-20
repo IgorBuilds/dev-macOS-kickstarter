@@ -16,7 +16,7 @@ export function buildChoices(config, statuses, optedOut = new Set(), preselected
     out.push({ title: pc.bold(sec.title), value: `§${sec.id}`, disabled: true });
     for (const item of items) {
       const st = statuses.get(item.id) ?? { state: 'unknown' };
-      const warn = item.window ? pc.dim('  🪟 own window') : '';
+      const warn = item.window ? pc.dim('  🪟 opens window') : '';
       const base = { value: item.id, description: item.note ?? undefined };
       if (st.state === 'installed') {
         out.push({ ...base, disabled: true, selected: false,

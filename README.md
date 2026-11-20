@@ -49,7 +49,7 @@ From a local clone:
 7. 🔔 A macOS notification + sound when it finishes (Hero = all good, Basso = something failed).
 
 Steps that may ask for your admin password (pkg installers like TeamViewer/OneDrive/Docker, App Store
-installs) always run in their **own window**, so the password prompt is visible.
+installs) always **open a new Terminal window**, so the password prompt is visible.
 
 ## 📁 Where things live
 

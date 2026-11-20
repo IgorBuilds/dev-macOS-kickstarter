@@ -63,7 +63,7 @@ test('missing selected, unknown and confirmed not selected', () => {
 
 test('window items carry a warning, notes become descriptions', () => {
   const hb = buildChoices(config, new Map([['homebrew', { state: 'missing' }]])).find((c) => c.value === 'homebrew');
-  assert.match(strip(hb.title), /🪟 own window/);
+  assert.match(strip(hb.title), /🪟 opens window/);
   assert.doesNotMatch(strip(hb.title), /⚠️/);
   assert.equal(hb.description, 'needs you');
 });

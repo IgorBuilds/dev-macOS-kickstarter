@@ -19,7 +19,7 @@ export async function confirmPlan(ordered, { config, prompts, ui, allowBack = tr
     for (const i of items) ui.print(`     ${i.emoji} ${i.name}${i.window ? `  ${pc.dim('🪟')}` : ''}`);
   }
   ui.print('');
-  if (windows) ui.print(pc.dim(`   🪟 = opens its own Terminal window (${windows})`));
+  if (windows) ui.print(pc.dim(`   🪟 = opens a new Terminal window (${windows})`));
   ui.print(pc.dim('   Runs in dependency order.'));
   ui.print('');
   const choices = [{ title: '▶️  Start', value: 'start' }];
