@@ -328,6 +328,14 @@ items:
     app: Rectangle Pro.app
     note: Free trial / $10 — best window manager.
 
+  - id: sublime-text
+    name: Sublime Text
+    emoji: 🟧
+    section: apps
+    brew_cask: sublime-text
+    app: Sublime Text.app
+    note: Fast text editor.
+
   - id: teamviewer
     name: TeamViewer
     emoji: 💻

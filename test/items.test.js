@@ -95,3 +95,11 @@ test('OrbStack app via official cask', () => {
   assert.equal(i.install, 'brew install --cask orbstack');
   assert.deepEqual(i.app, ['OrbStack.app']);
 });
+
+test('Sublime Text app via official cask', () => {
+  const i = config.items.find((x) => x.id === 'sublime-text');
+  assert.ok(i, 'missing sublime-text');
+  assert.equal(i.section, 'apps');
+  assert.equal(i.install, 'brew install --cask sublime-text');
+  assert.deepEqual(i.app, ['Sublime Text.app']);
+});
