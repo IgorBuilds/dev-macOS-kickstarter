@@ -87,3 +87,11 @@ test('free ⌘Space for Alfred: macOS item after Alfred, disables Spotlight hotk
   assert.match(i.install, /<integer>32<\/integer><integer>49<\/integer><integer>1048576<\/integer>/);
   assert.match(i.install, /activateSettings -u/);
 });
+
+test('OrbStack app via official cask', () => {
+  const i = config.items.find((x) => x.id === 'orbstack');
+  assert.ok(i, 'missing orbstack');
+  assert.equal(i.section, 'apps');
+  assert.equal(i.install, 'brew install --cask orbstack');
+  assert.deepEqual(i.app, ['OrbStack.app']);
+});

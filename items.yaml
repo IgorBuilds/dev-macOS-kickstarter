@@ -303,6 +303,14 @@ items:
     app: OneDrive.app
     sudo: true
 
+  - id: orbstack
+    name: OrbStack
+    emoji: 🟣
+    section: apps
+    brew_cask: orbstack
+    app: OrbStack.app
+    note: Fast, light Docker Desktop replacement (containers + Linux VMs). Pick one of Docker Desktop / OrbStack.
+
   - id: orca
     name: Orca
     emoji: 🐋
