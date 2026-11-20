@@ -39,7 +39,8 @@ From a local clone:
 ## 🧭 How a run goes
 
 1. 🔍 Every item's check runs (read-only). Installed apps — even ones you installed by hand — show ✔.
-2. ☑️ One checklist per section (A–Z). Missing items are pre-selected.
+2. ☑️ One checklist per section (A–Z). Missing items are pre-selected — except ones you unticked last
+   time, which stay unticked (*skipped last time*). Tick one again and it's remembered as wanted.
 3. 🛍️ Picked App Store apps? A friendly reminder to sign in first (or skip them this run).
 4. ▶️ Items run in dependency order. Items marked ⚠️ *opens window* pause first, then run in their own
    Terminal window — the main window waits (press `a` to abandon a stuck window).

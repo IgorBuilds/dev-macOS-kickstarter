@@ -116,3 +116,29 @@ test('dry-run never sends the finish notification', async () => {
   await main(['--dry-run', '--only', 'keyboard-navigation'], deps(home, { notify: async () => { notified++; } }));
   assert.equal(notified, 0);
 });
+
+test('opt-outs from the picker are saved, and not in dry-run', async () => {
+  const { recordOptOuts } = await import('../src/state.js');
+  assert.equal(typeof recordOptOuts, 'function');
+  const home = tmp();
+  const d = deps(home, { detectAll: async (items) => new Map(items.map((i) => [i.id, { state: i.id === 'bruno' ? 'missing' : 'installed', via: 'check' }])) });
+  prompts.inject([[]]); // apps section: untick bruno (only section with something to pick)
+  await main(['--dry-run'], d);
+  assert.ok(!existsSync(join(home, 'state.json')), 'dry-run must not save opt-outs');
+});
+
+test('real run: unticked missing items are remembered and start unticked next time', async () => {
+  const home = tmp();
+  const detect = async (items) => new Map(items.map((i) => [i.id, { state: i.id === 'bruno' ? 'missing' : 'installed', via: 'check' }]));
+  prompts.inject([[]]); // untick bruno → nothing picked → nothing installs
+  await main([], deps(home, { detectAll: detect, notify: async () => {} }));
+  const state = JSON.parse(readFileSync(join(home, 'state.json'), 'utf8'));
+  assert.ok(state.items.bruno.optedOut);
+
+  const asked = [];
+  const spy = async (q, o) => { asked.push(q); return prompts(q, o); };
+  prompts.inject([[]]);
+  await main([], deps(home, { detectAll: detect, prompts: spy, notify: async () => {} }));
+  const bruno = asked[0].choices.find((c) => c.value === 'bruno');
+  assert.equal(bruno.selected, false);
+});

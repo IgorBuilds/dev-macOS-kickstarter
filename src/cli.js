@@ -9,7 +9,7 @@ import { loadConfig, ConfigError } from './config.js';
 import { orderForRun, missingDeps } from './order.js';
 import { runShell } from './shell.js';
 import { brewEnv } from './env.js';
-import { dataHome, loadState, saveState } from './state.js';
+import { dataHome, loadState, saveState, recordOptOuts, optedOutIds } from './state.js';
 import { createRun, diskFreeKb as realDiskFreeKb, sizeKb, systemInfo as realSystemInfo } from './telemetry.js';
 import { detectItem, detectAll as realDetectAll } from './detect.js';
 import { applyBuiltin, builtinCheck } from './managed-block.js';
@@ -172,7 +172,16 @@ export async function main(argv, deps = {}) {
   }
 
   try {
-    let picked = args.only ? new Set(args.only) : new Set(await pickItems(config, statuses, { prompts, print: ui.print }));
+    let picked;
+    if (args.only) picked = new Set(args.only);
+    else {
+      picked = new Set(await pickItems(config, statuses, { prompts, print: ui.print, optedOut: optedOutIds(state) }));
+      if (!args.dryRun) {
+        const missing = config.items.filter((i) => statuses.get(i.id)?.state === 'missing').map((i) => i.id);
+        recordOptOuts(state, { missing, picked: [...picked] });
+        saveState(home, state);
+      }
+    }
     if (!picked.size) { ui.print('\n👋 Nothing picked.'); return await finalize(false); }
     run.event('picked', { ids: [...picked] });
 

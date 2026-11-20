@@ -76,3 +76,14 @@ test('pnpm comes from Homebrew, not from an nvm Node', () => {
 test('bun and deno also count as installed when already on PATH (official installers)', () => {
   for (const id of ['bun', 'deno']) assert.match(config.items.find((i) => i.id === id).check, new RegExp(`\\|\\| command -v ${id}`));
 });
+
+test('free ⌘Space for Alfred: macOS item after Alfred, disables Spotlight hotkey 64 and applies it live', () => {
+  const i = config.items.find((x) => x.id === 'spotlight-shortcut');
+  assert.ok(i, 'missing spotlight-shortcut');
+  assert.equal(i.section, 'macos');
+  assert.ok(i.needs.includes('alfred'));
+  assert.match(i.check, /AppleSymbolicHotKeys:64:enabled/);
+  assert.match(i.install, /-dict-add 64 .*<false\/>/);
+  assert.match(i.install, /<integer>32<\/integer><integer>49<\/integer><integer>1048576<\/integer>/);
+  assert.match(i.install, /activateSettings -u/);
+});

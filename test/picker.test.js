@@ -90,3 +90,9 @@ test('pickItems cursor starts on the first selectable row', async () => {
   const apps = asked[0];
   assert.equal(apps.choices[apps.cursor].disabled, undefined);
 });
+
+test('opted-out missing items start unticked with a hint', () => {
+  const c = buildChoices(config, statuses, new Set(['xcode'])).find((x) => x.value === 'xcode');
+  assert.equal(c.selected, false);
+  assert.match(strip(c.title), /skipped last time/);
+});

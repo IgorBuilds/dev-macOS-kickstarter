@@ -7,7 +7,7 @@ const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 
  * Vertical multiselect choices: section header, items A–Z, blank spacer between sections.
  * Header values start with "§", spacers with "·" (both disabled).
  */
-export function buildChoices(config, statuses) {
+export function buildChoices(config, statuses, optedOut = new Set()) {
   const out = [];
   config.sections.forEach((sec, n) => {
     const items = config.items.filter((i) => i.section === sec.id).sort(byName);
@@ -24,8 +24,9 @@ export function buildChoices(config, statuses) {
       } else if (st.state === 'confirmed') {
         out.push({ ...base, selected: false, title: `👤 ${item.name}  ${pc.dim('you confirmed')}${warn}` });
       } else {
-        out.push({ ...base, selected: st.state === 'missing',
-          title: `${item.emoji} ${item.name}${st.state === 'unknown' ? pc.dim('  (can’t check)') : ''}${warn}` });
+        const skipped = optedOut.has(item.id);
+        out.push({ ...base, selected: st.state === 'missing' && !skipped,
+          title: `${item.emoji} ${item.name}${st.state === 'unknown' ? pc.dim('  (can’t check)') : ''}${skipped ? pc.dim('  (skipped last time)') : ''}${warn}` });
       }
     }
   });
@@ -36,10 +37,10 @@ export function buildChoices(config, statuses) {
  * Show one vertical multiselect per section (A–Z, blank line between sections).
  * Sections where everything is already installed are printed, not asked. Returns picked ids.
  */
-export async function pickItems(config, statuses, { prompts, print = (t) => console.log(t) }) {
+export async function pickItems(config, statuses, { prompts, print = (t) => console.log(t), optedOut = new Set() }) {
   const picked = [];
   for (const sec of config.sections) {
-    const choices = buildChoices({ sections: [sec], items: config.items }, statuses).slice(1); // drop header row
+    const choices = buildChoices({ sections: [sec], items: config.items }, statuses, optedOut).slice(1); // drop header row
     if (!choices.length) continue;
     print('');
     const cursor = choices.findIndex((c) => !c.disabled);

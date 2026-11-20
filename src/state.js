@@ -34,3 +34,22 @@ export function saveState(home, state) {
   writeFileSync(`${p}.tmp`, JSON.stringify(state, null, 2) + '\n');
   renameSync(`${p}.tmp`, p);
 }
+
+/**
+ * Remember opt-outs from the picker: a missing item (pre-ticked) that was left unticked is
+ * remembered so it starts unticked next run; anything picked clears a previous opt-out.
+ */
+export function recordOptOuts(state, { missing, picked, now = new Date() }) {
+  const chosen = new Set(picked);
+  for (const id of chosen) if (state.items[id]) delete state.items[id].optedOut;
+  for (const id of missing) {
+    if (chosen.has(id)) continue;
+    state.items[id] = { ...(state.items[id] ?? {}), optedOut: now.toISOString() };
+  }
+  return state;
+}
+
+/** Ids the user opted out of in an earlier run. */
+export function optedOutIds(state) {
+  return new Set(Object.entries(state.items).filter(([, v]) => v?.optedOut).map(([id]) => id));
+}
